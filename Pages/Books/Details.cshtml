@@ -1,0 +1,33 @@
+﻿@page
+@model Sician_Diana_Lab2.Pages.Books.DetailsModel
+
+@{
+    ViewData["Title"] = "Details";
+}
+
+<h1>Details</h1>
+
+<div>
+    <h4>Book</h4>
+    <hr />
+    <dl class="row">
+        <dt class="col-sm-2">Title</dt>
+        <dd class="col-sm-10">@Model.Book.Title</dd>
+
+        <dt class="col-sm-2">Author</dt>
+        <dd class="col-sm-10">@($"{Model.Book.Author?.FirstName} {Model.Book.Author?.LastName}")</dd>
+
+        <dt class="col-sm-2">Price</dt>
+        <dd class="col-sm-10">@Model.Book.Price</dd>
+
+        <dt class="col-sm-2">PublishingDate</dt>
+        <dd class="col-sm-10">@Model.Book.PublishingDate.ToShortDateString()</dd>
+
+        <dt class="col-sm-2">Publisher</dt>
+        <dd class="col-sm-10">@Model.Book.Publisher?.PublisherName</dd>
+    </dl>
+</div>
+<div>
+    <a asp-page="./Edit" asp-route-id="@Model.Book.ID">Edit</a> |
+    <a asp-page="./Index">Back to List</a>
+</div>
