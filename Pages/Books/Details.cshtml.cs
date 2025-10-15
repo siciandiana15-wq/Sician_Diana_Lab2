@@ -20,10 +20,12 @@ namespace Sician_Diana_Lab2.Pages.Books
             Book = await _context.Book
                 .Include(b => b.Author)
                 .Include(b => b.Publisher)
+                .Include(b => b.BookCategories)        // <—
+                    .ThenInclude(bc => bc.Category)    // <—
+                .AsNoTracking()
                 .FirstOrDefaultAsync(m => m.ID == id);
 
-            if (Book == null) return NotFound();
-            return Page();
+            return Book == null ? NotFound() : Page();
         }
     }
 }

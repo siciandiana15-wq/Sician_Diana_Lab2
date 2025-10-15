@@ -8,35 +8,81 @@ using Sician_Diana_Lab2.Models;
 namespace Sician_Diana_Lab2.Pages.Books
 {
     public class IndexModel : PageModel
+{
+    private readonly Sician_Diana_Lab2Context _context;
+
+    // constructor – doar păstrez contextul
+    public IndexModel(Sician_Diana_Lab2Context context) => _context = context;
+
+    // rămâne pentru compatibilitate cu .cshtml (dacă era legat de asta)
+    public IList<Book> Book { get; set; } = new List<Book>();
+
+    // ce cere lab-ul – „view model”-ul cu listele ce-mi trebuie
+    public BookData BookD { get; set; } = default!;
+
+    // id carte selectată (din lab)
+    public int? BookID { get; set; }
+
+    // id categorie selectată (din lab)
+    public int? CategoryID { get; set; }
+
+    // păstrez filtrarea ta existentă după autor (nu o stric)
+    [BindProperty(SupportsGet = true)]
+    public int? AuthorID { get; set; }
+
+    // dropdown cu autori – îl populăm ca înainte
+    public SelectList AuthorsSelect { get; set; } = default!;
+
+    // am unificat semnătura din lab cu a ta: primesc id + categoryID din querystring
+    public async Task OnGetAsync(int? id, int? categoryID)
     {
-        private readonly Sician_Diana_Lab2Context _context;
-        public IndexModel(Sician_Diana_Lab2Context context) => _context = context;
+        // 1) Populez dropdown-ul de autori (ca înainte)
+        var authors = await _context.Author
+            .OrderBy(a => a.LastName)
+            .ToListAsync();
+        AuthorsSelect = new SelectList(authors, "ID", "LastName");
 
-        public IList<Book> Book { get; set; } = new List<Book>();
+        // 2) Construiesc query-ul de cărți cu includerile cerute în lab
+        //    + păstrez filtrarea ta după AuthorID dacă e setată
+        IQueryable<Book> query = _context.Book
+            .Include(b => b.Publisher)              // lab: includ editorul
+            .Include(b => b.BookCategories)         // lab: includ legătura many-to-many
+                .ThenInclude(bc => bc.Category)     // lab: includ categoriile efective
+            .Include(b => b.Author)                 // păstrez și Author (tu îl foloseai)
+            .AsNoTracking()
+            .OrderBy(b => b.Title);                 // lab: sortez după titlu
 
-        
-        [BindProperty(SupportsGet = true)]
-        public int? AuthorID { get; set; }
-
-        public SelectList AuthorsSelect { get; set; } = default!;
-
-        public async Task OnGetAsync()
+        // dacă s-a selectat un autor din dropdown, filtrez (comportamentul tău inițial)
+        if (AuthorID.HasValue)
         {
-            
-            var authors = await _context.Author
-                .OrderBy(a => a.LastName)
-                .ToListAsync();
-            AuthorsSelect = new SelectList(authors, "ID", "LastName");
-
-            
-            IQueryable<Book> query = _context.Book
-                .Include(b => b.Author)
-                .Include(b => b.Publisher);
-
-            if (AuthorID.HasValue)
-                query = query.Where(b => b.AuthorID == AuthorID.Value);
-
-            Book = await query.ToListAsync();
+            query = query.Where(b => b.AuthorID == AuthorID.Value);
         }
+
+        // 3) Umplu BookData conform lab-ului
+        BookD = new BookData
+        {
+            Books = await query.ToListAsync()
+        };
+
+        // 4) Dacă mi-a venit un id de carte, scot categoriile cărții selectate (lab)
+        if (id != null)
+        {
+            BookID = id.Value;
+            var book = BookD.Books.Single(i => i.ID == id.Value); // știu sigur că e una
+            BookD.Categories = book.BookCategories.Select(s => s.Category);
+        }
+
+        // 5) Dacă mi-a venit categoryID, mai aplic o filtrare în memorie (lab)
+        if (categoryID != null)
+        {
+            CategoryID = categoryID.Value;
+            BookD.Books = BookD.Books
+                .Where(b => b.BookCategories.Any(bc => bc.CategoryID == CategoryID))
+                .ToList();
+        }
+
+        // 6) Pentru .cshtml care poate folosi încă `Model.Book`, copiez lista (nu stric nimic)
+        Book = BookD.Books.ToList();
     }
+}
 }

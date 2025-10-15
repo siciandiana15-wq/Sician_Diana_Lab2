@@ -7,13 +7,13 @@ using Sician_Diana_Lab2.Models;
 
 namespace Sician_Diana_Lab2.Pages.Books
 {
-    public class EditModel : PageModel
+    public class EditModel : BookCategoriesPageModel
     {
         private readonly Sician_Diana_Lab2Context _context;
         public EditModel(Sician_Diana_Lab2Context context) => _context = context;
 
         [BindProperty]
-        public Book Book { get; set; } = default!;
+        public Book Book { get; set; } = new();
 
         public async Task<IActionResult> OnGetAsync(int? id)
         {
@@ -22,29 +22,74 @@ namespace Sician_Diana_Lab2.Pages.Books
             Book = await _context.Book
                 .Include(b => b.Author)
                 .Include(b => b.Publisher)
+                .Include(b => b.BookCategories).ThenInclude(b => b.Category)
+                .AsNoTracking()
                 .FirstOrDefaultAsync(m => m.ID == id);
 
-            if (Book == null) return NotFound();
+            if (Book == null)
+            {
+                return NotFound();
+            }
 
-            ViewData["AuthorID"] = new SelectList(_context.Author.OrderBy(a => a.LastName), "ID", "LastName", Book.AuthorID);
-            ViewData["PublisherID"] = new SelectList(_context.Publisher.OrderBy(p => p.PublisherName), "ID", "PublisherName", Book.PublisherID);
+            // pregătesc lista de categorii care vor apărea cu bifele corespunzătoare
+            PopulateAssignedCategoryData(_context, Book);
+
+            // fac lista de autori cu numele complet pentru dropdown
+            var authorList = _context.Author
+                .Select(x => new
+                {
+                    x.ID,
+                    FullName = x.LastName + " " + x.FirstName
+                });
+
+            // încarc dropdown-urile pentru autor și publisher
+            ViewData["AuthorID"] = new SelectList(authorList, "ID", "FullName");
+            ViewData["PublisherID"] = new SelectList(_context.Publisher, "ID", "PublisherName");
+
             return Page();
         }
 
-        public async Task<IActionResult> OnPostAsync()
+        // am pus ? la selectedCategories ca să nu dea eroare dacă nu bifez nicio categorie
+        public async Task<IActionResult> OnPostAsync(int? id, string[]? selectedCategories)
         {
-            if (!ModelState.IsValid)
+            if (id == null) return NotFound();
+
+            var bookToUpdate = await _context.Book
+                .Include(b => b.BookCategories)
+                .ThenInclude(bc => bc.Category)
+                .FirstOrDefaultAsync(b => b.ID == id);
+
+            if (bookToUpdate == null) return NotFound();
+
+            // actualizez restul datelor despre carte (titlu, autor, preț, etc.)
+            if (await TryUpdateModelAsync<Book>(
+                    bookToUpdate,
+                    "Book",
+                    b => b.Title,
+                    b => b.AuthorID,
+                    b => b.Price,
+                    b => b.PublishingDate,
+                    b => b.PublisherID))
             {
-                ViewData["AuthorID"] = new SelectList(_context.Author.OrderBy(a => a.LastName), "ID", "LastName", Book.AuthorID);
-                ViewData["PublisherID"] = new SelectList(_context.Publisher.OrderBy(p => p.PublisherName), "ID", "PublisherName", Book.PublisherID);
-                return Page();
+                // sincronizez categoriile selectate și apoi salvez
+                UpdateBookCategories(_context, selectedCategories, bookToUpdate);
+                await _context.SaveChangesAsync();
+                return RedirectToPage("./Index");
             }
 
-            // atașăm cartea din formular și marcăm ca modificată
-            _context.Attach(Book).State = EntityState.Modified;
+            // dacă apar erori, refac bifele și dropdown-urile pentru reafișare
+            PopulateAssignedCategoryData(_context, bookToUpdate);
 
-            await _context.SaveChangesAsync();
-            return RedirectToPage("./Index");
+            var authorList = _context.Author
+                .Select(a => new { a.ID, FullName = a.LastName + " " + a.FirstName })
+                .OrderBy(a => a.FullName);
+
+            ViewData["AuthorID"] = new SelectList(authorList, "ID", "FullName", bookToUpdate.AuthorID);
+            ViewData["PublisherID"] = new SelectList(
+                _context.Publisher.OrderBy(p => p.PublisherName),
+                "ID", "PublisherName", bookToUpdate.PublisherID);
+
+            return Page();
         }
     }
 }

@@ -25,6 +25,22 @@
 
         <dt class="col-sm-2">Publisher</dt>
         <dd class="col-sm-10">@Model.Book.Publisher?.PublisherName</dd>
+        <dt class="col-sm-2">Categories</dt>
+        <dd class="col-sm-10">
+            @if (Model.Book.BookCategories?.Any() == true)
+            {
+                <ul>
+                    @foreach (var bc in Model.Book.BookCategories.OrderBy(x => x.Category.CategoryName))
+                    {
+                        <li>@bc.Category.CategoryName</li>
+                    }
+                </ul>
+            }
+            else
+            {
+                <em>Fără categorie</em>
+            }
+        </dd>
     </dl>
 </div>
 <div>

@@ -1,4 +1,4 @@
-﻿@page
+﻿@page "/"
 @model Sician_Diana_Lab2.Pages.Books.IndexModel
 
 @{
@@ -27,18 +27,51 @@
             <th>@Html.DisplayNameFor(m => m.Book[0].Price)</th>
             <th>@Html.DisplayNameFor(m => m.Book[0].PublishingDate)</th>
             <th>@Html.DisplayNameFor(m => m.Book[0].Publisher.PublisherName)</th>
+            <th>
+                @Html.DisplayNameFor(model => model.Book[0].BookCategories)
+            </th>
             <th></th>
         </tr>
     </thead>
     <tbody>
-        @foreach (var item in Model.Book)
+        @foreach (var item in Model.BookD.Books)
         {
-            <tr>
-                <td>@item.Title</td>
-                <td>@($"{item.Author?.FirstName} {item.Author?.LastName}")</td>
-                <td>@item.Price</td>
-                <td>@item.PublishingDate.ToShortDateString()</td>
-                <td>@item.Publisher?.PublisherName</td>
+            // verific dacă această carte este cea selectată și schimb culoarea rândului
+            string selectedRow = "";
+            if (item.ID == Model.BookID)
+            {
+                selectedRow = "table-success"; // evidențiez cartea selectată
+            }
+
+            <tr class="@selectedRow">
+                <td>
+                    @Html.DisplayFor(modelItem => item.Title)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.Author)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.Price)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.PublishingDate)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.Publisher.PublisherName)
+                </td>
+                <td>
+                    <!-- afișez categoriile fiecărei cărți -->
+                    @foreach (var category in item.BookCategories)
+                    {
+                        <!-- fiecare categorie devine link pentru filtrare -->
+                        <a asp-page="./Index"
+                           asp-route-id="@item.ID"
+                           asp-route-categoryID="@category.Category.ID">
+                            @category.Category.CategoryName
+                        </a>
+                        <br />
+                    }
+                </td>
                 <td>
                     <a asp-page="./Edit" asp-route-id="@item.ID">Edit</a> |
                     <a asp-page="./Details" asp-route-id="@item.ID">Details</a> |
@@ -47,4 +80,5 @@
             </tr>
         }
     </tbody>
+
 </table>
