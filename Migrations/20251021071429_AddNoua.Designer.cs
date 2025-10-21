@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Sician_Diana_Lab2.Data;
 
@@ -11,9 +12,11 @@ using Sician_Diana_Lab2.Data;
 namespace Sician_Diana_Lab2.Migrations
 {
     [DbContext(typeof(Sician_Diana_Lab2Context))]
-    partial class Sician_Diana_Lab2ContextModelSnapshot : ModelSnapshot
+    [Migration("20251021071429_AddNoua")]
+    partial class AddNoua
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -76,46 +79,6 @@ namespace Sician_Diana_Lab2.Migrations
                     b.ToTable("Book");
                 });
 
-            modelBuilder.Entity("Sician_Diana_Lab2.Models.BookCategory", b =>
-                {
-                    b.Property<int>("ID")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("ID"));
-
-                    b.Property<int>("BookID")
-                        .HasColumnType("int");
-
-                    b.Property<int>("CategoryID")
-                        .HasColumnType("int");
-
-                    b.HasKey("ID");
-
-                    b.HasIndex("BookID");
-
-                    b.HasIndex("CategoryID");
-
-                    b.ToTable("BookCategory");
-                });
-
-            modelBuilder.Entity("Sician_Diana_Lab2.Models.Category", b =>
-                {
-                    b.Property<int>("ID")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("ID"));
-
-                    b.Property<string>("CategoryName")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.HasKey("ID");
-
-                    b.ToTable("Category");
-                });
-
             modelBuilder.Entity("Sician_Diana_Lab2.Models.Publisher", b =>
                 {
                     b.Property<int>("ID")
@@ -136,7 +99,7 @@ namespace Sician_Diana_Lab2.Migrations
             modelBuilder.Entity("Sician_Diana_Lab2.Models.Book", b =>
                 {
                     b.HasOne("Sician_Diana_Lab2.Models.Author", "Author")
-                        .WithMany("Books")
+                        .WithMany()
                         .HasForeignKey("AuthorID");
 
                     b.HasOne("Sician_Diana_Lab2.Models.Publisher", "Publisher")
@@ -146,40 +109,6 @@ namespace Sician_Diana_Lab2.Migrations
                     b.Navigation("Author");
 
                     b.Navigation("Publisher");
-                });
-
-            modelBuilder.Entity("Sician_Diana_Lab2.Models.BookCategory", b =>
-                {
-                    b.HasOne("Sician_Diana_Lab2.Models.Book", "Book")
-                        .WithMany("BookCategories")
-                        .HasForeignKey("BookID")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("Sician_Diana_Lab2.Models.Category", "Category")
-                        .WithMany("BookCategories")
-                        .HasForeignKey("CategoryID")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Book");
-
-                    b.Navigation("Category");
-                });
-
-            modelBuilder.Entity("Sician_Diana_Lab2.Models.Author", b =>
-                {
-                    b.Navigation("Books");
-                });
-
-            modelBuilder.Entity("Sician_Diana_Lab2.Models.Book", b =>
-                {
-                    b.Navigation("BookCategories");
-                });
-
-            modelBuilder.Entity("Sician_Diana_Lab2.Models.Category", b =>
-                {
-                    b.Navigation("BookCategories");
                 });
 
             modelBuilder.Entity("Sician_Diana_Lab2.Models.Publisher", b =>

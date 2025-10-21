@@ -17,16 +17,33 @@
 
 <p>
     <a asp-page="Create">Create New</a>
+    <form asp-page="./Index" method="get">
+        <div class="form-actions no-color">
+            <p>
+                Find by Book Title / Author Name:
+                <input type="text" name="searchString" value="@Model.CurrentFilter" />
+                <input type="submit" value="Search" class="btn btn-primary" /> |
+                <a asp-page="./Index">Back to full List</a>
+            </p>
+        </div>
+    </form>
 </p>
 
 <table class="table">
     <thead>
         <tr>
-            <th>@Html.DisplayNameFor(m => m.Book[0].Title)</th>
+            <th>
+                <a asp-page="./Index" asp-route-sortOrder="@Model.TitleSort">
+                @Html.DisplayNameFor(m => m.Book[0].Title)
+                </a>
+                </th>
             <th>Author</th>
             <th>@Html.DisplayNameFor(m => m.Book[0].Price)</th>
             <th>@Html.DisplayNameFor(m => m.Book[0].PublishingDate)</th>
             <th>@Html.DisplayNameFor(m => m.Book[0].Publisher.PublisherName)</th>
+            <a asp-page="./Index" asp-route-sortOrder="@Model.AuthorSort">
+            <th>@Html.DisplayNameFor(m => m.Book[0].Author)</th>
+            </a>
             <th>
                 @Html.DisplayNameFor(model => model.Book[0].BookCategories)
             </th>
@@ -47,8 +64,9 @@
                 <td>
                     @Html.DisplayFor(modelItem => item.Title)
                 </td>
-                
+                 
                 <td>@($"{item.Author.FirstName} {item.Author.LastName}")</td>
+                
 
                 
                 <td>
