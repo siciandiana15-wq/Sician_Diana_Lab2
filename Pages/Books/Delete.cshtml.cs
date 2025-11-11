@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
 using Sician_Diana_Lab2.Data;
@@ -6,6 +7,7 @@ using Sician_Diana_Lab2.Models;
 
 namespace Sician_Diana_Lab2.Pages.Books
 {
+    [Authorize(Roles = "Admin")]
     public class DeleteModel : PageModel
     {
         private readonly Sician_Diana_Lab2Context _context;
